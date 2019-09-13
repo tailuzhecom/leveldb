@@ -66,6 +66,7 @@ class LEVELDB_EXPORT Slice {
   }
 
   // Drop the first "n" bytes from this slice.
+  // 删除前n个byte
   void remove_prefix(size_t n) {
     assert(n <= size());
     data_ += n;
@@ -81,7 +82,8 @@ class LEVELDB_EXPORT Slice {
   //   >  0 iff "*this" >  "b"
   int compare(const Slice& b) const;
 
-  // Return true iff "x" is a prefix of "*this"
+  // Return true if "x" is a prefix of "*this"
+  // 如果x为当前Slice的前缀返回true
   bool starts_with(const Slice& x) const {
     return ((size_ >= x.size_) && (memcmp(data_, x.data_, x.size_) == 0));
   }
@@ -91,6 +93,7 @@ class LEVELDB_EXPORT Slice {
   size_t size_;
 };
 
+
 inline bool operator==(const Slice& x, const Slice& y) {
   return ((x.size() == y.size()) &&
           (memcmp(x.data(), y.data(), x.size()) == 0));
@@ -98,6 +101,10 @@ inline bool operator==(const Slice& x, const Slice& y) {
 
 inline bool operator!=(const Slice& x, const Slice& y) { return !(x == y); }
 
+// Three-way comparison.  Returns value:
+//   <  0 iff "*this" <  "b",
+//   == 0 iff "*this" == "b",
+//   >  0 iff "*this" >  "b"
 inline int Slice::compare(const Slice& b) const {
   const size_t min_len = (size_ < b.size_) ? size_ : b.size_;
   int r = memcmp(data_, b.data_, min_len);
