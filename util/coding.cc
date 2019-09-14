@@ -6,12 +6,14 @@
 
 namespace leveldb {
 
+// dst追加32bit的value
 void PutFixed32(std::string* dst, uint32_t value) {
   char buf[sizeof(value)];
   EncodeFixed32(buf, value);
   dst->append(buf, sizeof(buf));
 }
 
+// dst追加64bit的value
 void PutFixed64(std::string* dst, uint64_t value) {
   char buf[sizeof(value)];
   EncodeFixed64(buf, value);

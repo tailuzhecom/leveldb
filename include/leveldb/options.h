@@ -22,6 +22,7 @@ class Snapshot;
 // sequence of key,value pairs.  Each block may be compressed before
 // being stored in a file.  The following enum describes which
 // compression method (if any) is used to compress a block.
+// 只有两种压缩类型，一种是None，另外一种是Snappy
 enum CompressionType {
   // NOTE: do not change the values of existing entries, as these are
   // part of the persistent format on disk.
@@ -56,6 +57,7 @@ struct LEVELDB_EXPORT Options {
   // errors.  This may have unforeseen ramifications: for example, a
   // corruption of one DB entry may cause a large number of entries to
   // become unreadable or for the entire DB to become unopenable.
+  // 如果为真，会对数据进行检查，如果检查出错误，将会停止数据库
   bool paranoid_checks = false;
 
   // Use the specified object to interact with the environment,
@@ -84,6 +86,7 @@ struct LEVELDB_EXPORT Options {
   // Number of open files that can be used by the DB.  You may need to
   // increase this if your database has a large working set (budget
   // one open file per 2MB of working set).
+  // leveldb所支持的最大打开文件数
   int max_open_files = 1000;
 
   // Control over blocks (user data is stored in a set of blocks, and
