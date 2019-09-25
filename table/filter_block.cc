@@ -13,7 +13,7 @@ namespace leveldb {
 
 // Generate new filter every 2KB of data
 static const size_t kFilterBaseLg = 11;
-static const size_t kFilterBase = 1 << kFilterBaseLg;
+static const size_t kFilterBase = 1 << kFilterBaseLg; // 每2KB创建一个新的filter
 
 FilterBlockBuilder::FilterBlockBuilder(const FilterPolicy* policy)
     : policy_(policy) {}
@@ -26,19 +26,23 @@ void FilterBlockBuilder::StartBlock(uint64_t block_offset) {
   }
 }
 
+// 将key记录到filter中
 void FilterBlockBuilder::AddKey(const Slice& key) {
   Slice k = key;
+  // 记录key在keys_中的起始地址
   start_.push_back(keys_.size());
+  // 将key记录到keys_中
   keys_.append(k.data(), k.size());
 }
 
+// 结束一个filter block的记录，将filter data和filter offset记录到filter block中
 Slice FilterBlockBuilder::Finish() {
   if (!start_.empty()) {
     GenerateFilter();
   }
 
   // Append array of per-filter offsets
-  const uint32_t array_offset = result_.size();
+  const uint32_t array_offset = result_.size(); // 每个result_对应一个filter data
   for (size_t i = 0; i < filter_offsets_.size(); i++) {
     PutFixed32(&result_, filter_offsets_[i]);
   }
@@ -48,8 +52,9 @@ Slice FilterBlockBuilder::Finish() {
   return Slice(result_);
 }
 
+// 生成对应的filter
 void FilterBlockBuilder::GenerateFilter() {
-  const size_t num_keys = start_.size();
+  const size_t num_keys = start_.size();  // key的数量
   if (num_keys == 0) {
     // Fast path if there are no keys for this filter
     filter_offsets_.push_back(result_.size());
@@ -58,7 +63,7 @@ void FilterBlockBuilder::GenerateFilter() {
 
   // Make list of keys from flattened key structure
   start_.push_back(keys_.size());  // Simplify length computation
-  tmp_keys_.resize(num_keys);
+  tmp_keys_.resize(num_keys); // 以slice的形式记录key,将所有的key记录到tmp_keys_中
   for (size_t i = 0; i < num_keys; i++) {
     const char* base = keys_.data() + start_[i];
     size_t length = start_[i + 1] - start_[i];
@@ -66,8 +71,8 @@ void FilterBlockBuilder::GenerateFilter() {
   }
 
   // Generate filter for current set of keys and append to result_.
-  filter_offsets_.push_back(result_.size());
-  policy_->CreateFilter(&tmp_keys_[0], static_cast<int>(num_keys), &result_);
+  filter_offsets_.push_back(result_.size()); // 记录filter data的偏移量到filter offset index中
+  policy_->CreateFilter(&tmp_keys_[0], static_cast<int>(num_keys), &result_); // 根据keys_生成filter data
 
   tmp_keys_.clear();
   keys_.clear();

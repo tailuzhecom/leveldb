@@ -28,6 +28,9 @@ class FilterPolicy;
 //
 // The sequence of calls to FilterBlockBuilder must match the regexp:
 //      (StartBlock AddKey*)* Finish
+// Filter block中包含了filter data用于记录filter的数据,filter data offset
+// 用于记录filter i在这个filter block中对应的偏移量，filter offset's offset
+// 表示索引数据filter data offset的开始地址的偏移量
 class FilterBlockBuilder {
  public:
   explicit FilterBlockBuilder(const FilterPolicy*);
@@ -43,11 +46,12 @@ class FilterBlockBuilder {
   void GenerateFilter();
 
   const FilterPolicy* policy_;
+  // keys_用于存储keys
   std::string keys_;             // Flattened key contents
-  std::vector<size_t> start_;    // Starting index in keys_ of each key
-  std::string result_;           // Filter data computed so far
+  std::vector<size_t> start_;    // start_[i]用于记录key i在keys_中的偏移量,Starting index in keys_ of each key
+  std::string result_;           // 对应filter data,Filter data computed so far
   std::vector<Slice> tmp_keys_;  // policy_->CreateFilter() argument
-  std::vector<uint32_t> filter_offsets_;
+  std::vector<uint32_t> filter_offsets_; // 对应filter offset
 };
 
 class FilterBlockReader {

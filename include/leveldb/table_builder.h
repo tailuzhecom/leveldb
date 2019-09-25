@@ -73,10 +73,12 @@ class LEVELDB_EXPORT TableBuilder {
   void Abandon();
 
   // Number of calls to Add() so far.
+  // 返回Record的数量
   uint64_t NumEntries() const;
 
   // Size of the file generated so far.  If invoked after a successful
   // Finish() call, returns the size of the final generated file.
+  // 返回所生成文件的大小
   uint64_t FileSize() const;
 
  private:

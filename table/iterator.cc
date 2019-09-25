@@ -7,11 +7,13 @@
 namespace leveldb {
 
 Iterator::Iterator() {
+  // 初始化CleanupNodeList的头结点
   cleanup_head_.function = nullptr;
   cleanup_head_.next = nullptr;
 }
 
 Iterator::~Iterator() {
+  // 遍历CleanupNodeList，逐个调用CleanupNode上的func，并销毁结点
   if (!cleanup_head_.IsEmpty()) {
     cleanup_head_.Run();
     for (CleanupNode* node = cleanup_head_.next; node != nullptr;) {
@@ -23,6 +25,7 @@ Iterator::~Iterator() {
   }
 }
 
+// 为每个CleanupNode注册CleanupFunction和对应的参数
 void Iterator::RegisterCleanup(CleanupFunction func, void* arg1, void* arg2) {
   assert(func != nullptr);
   CleanupNode* node;
@@ -39,7 +42,6 @@ void Iterator::RegisterCleanup(CleanupFunction func, void* arg1, void* arg2) {
 }
 
 namespace {
-
 class EmptyIterator : public Iterator {
  public:
   EmptyIterator(const Status& s) : status_(s) {}

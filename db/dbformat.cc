@@ -99,6 +99,7 @@ void InternalKeyComparator::FindShortSuccessor(std::string* key) const {
 
 const char* InternalFilterPolicy::Name() const { return user_policy_->Name(); }
 
+// keys为keys数组的起始地址,n为key的数量,dst为filter data
 void InternalFilterPolicy::CreateFilter(const Slice* keys, int n,
                                         std::string* dst) const {
   // We rely on the fact that the code in table.cc does not mind us

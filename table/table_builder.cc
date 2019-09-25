@@ -17,7 +17,7 @@
 #include "util/crc32c.h"
 
 namespace leveldb {
-
+// struct Rep的实现
 struct TableBuilder::Rep {
   Rep(const Options& opt, WritableFile* f)
       : options(opt),

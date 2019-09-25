@@ -14,6 +14,7 @@ static uint32_t BloomHash(const Slice& key) {
   return Hash(key.data(), key.size(), 0xbc9f1d34);
 }
 
+// Bloomfilter的实现
 class BloomFilterPolicy : public FilterPolicy {
  public:
   explicit BloomFilterPolicy(int bits_per_key) : bits_per_key_(bits_per_key) {
@@ -25,34 +26,39 @@ class BloomFilterPolicy : public FilterPolicy {
 
   const char* Name() const override { return "leveldb.BuiltinBloomFilter2"; }
 
+  // keys为key的数组,n为key的数量
   void CreateFilter(const Slice* keys, int n, std::string* dst) const override {
     // Compute bloom filter size (in both bits and bytes)
-    size_t bits = n * bits_per_key_;
+    size_t bits = n * bits_per_key_;    // 计算filter的大小
 
     // For small n, we can see a very high false positive rate.  Fix it
     // by enforcing a minimum bloom filter length.
+    // filter最小为64bit
     if (bits < 64) bits = 64;
 
-    size_t bytes = (bits + 7) / 8;
-    bits = bytes * 8;
+    size_t bytes = (bits + 7) / 8; // 计算filter有多少byte,数值向上取整
+    bits = bytes * 8; // 计算对应要用多少bit
 
-    const size_t init_size = dst->size();
-    dst->resize(init_size + bytes, 0);
+    const size_t init_size = dst->size(); // filter data部分的占用的空间
+    dst->resize(init_size + bytes, 0);  // 更新filter data的大小
     dst->push_back(static_cast<char>(k_));  // Remember # of probes in filter
     char* array = &(*dst)[init_size];
     for (int i = 0; i < n; i++) {
       // Use double-hashing to generate a sequence of hash values.
       // See analysis in [Kirsch,Mitzenmacher 2006].
-      uint32_t h = BloomHash(keys[i]);
+      uint32_t h = BloomHash(keys[i]);  // 计算key对应的hash value
+      // hash value进行二次处理
       const uint32_t delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
+      // 在filter中将hash value对应的位置1,之后hash value加上delta,重复k_次
       for (size_t j = 0; j < k_; j++) {
         const uint32_t bitpos = h % bits;
-        array[bitpos / 8] |= (1 << (bitpos % 8));
+        array[bitpos / 8] |= (1 << (bitpos % 8)); // 根据bitpos选择对应的字节，算出这个字节中要置1的位
         h += delta;
       }
     }
   }
 
+  // 如果filter中记录了key，返回true，否则返回false
   bool KeyMayMatch(const Slice& key, const Slice& bloom_filter) const override {
     const size_t len = bloom_filter.size();
     if (len < 2) return false;
@@ -71,6 +77,7 @@ class BloomFilterPolicy : public FilterPolicy {
 
     uint32_t h = BloomHash(key);
     const uint32_t delta = (h >> 17) | (h << 15);  // Rotate right 17 bits
+    // 只有对应k次操作中对应的位全部为1,这个key才有可能存在,否则一定不存在
     for (size_t j = 0; j < k; j++) {
       const uint32_t bitpos = h % bits;
       if ((array[bitpos / 8] & (1 << (bitpos % 8))) == 0) return false;
@@ -81,7 +88,7 @@ class BloomFilterPolicy : public FilterPolicy {
 
  private:
   size_t bits_per_key_;
-  size_t k_;
+  size_t k_;  // 哈希的次数
 };
 }  // namespace
 
