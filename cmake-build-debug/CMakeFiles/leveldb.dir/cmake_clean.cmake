@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/leveldb.dir/test/filter_block_test.cpp.o"
   "CMakeFiles/leveldb.dir/db/builder.cc.o"
   "CMakeFiles/leveldb.dir/db/c.cc.o"
   "CMakeFiles/leveldb.dir/db/db_impl.cc.o"

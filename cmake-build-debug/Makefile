@@ -1838,6 +1838,33 @@ table/two_level_iterator.cc.s:
 	$(MAKE) -f CMakeFiles/leveldb.dir/build.make CMakeFiles/leveldb.dir/table/two_level_iterator.cc.s
 .PHONY : table/two_level_iterator.cc.s
 
+test/filter_block_test.o: test/filter_block_test.cpp.o
+
+.PHONY : test/filter_block_test.o
+
+# target to build an object file
+test/filter_block_test.cpp.o:
+	$(MAKE) -f CMakeFiles/leveldb.dir/build.make CMakeFiles/leveldb.dir/test/filter_block_test.cpp.o
+.PHONY : test/filter_block_test.cpp.o
+
+test/filter_block_test.i: test/filter_block_test.cpp.i
+
+.PHONY : test/filter_block_test.i
+
+# target to preprocess a source file
+test/filter_block_test.cpp.i:
+	$(MAKE) -f CMakeFiles/leveldb.dir/build.make CMakeFiles/leveldb.dir/test/filter_block_test.cpp.i
+.PHONY : test/filter_block_test.cpp.i
+
+test/filter_block_test.s: test/filter_block_test.cpp.s
+
+.PHONY : test/filter_block_test.s
+
+# target to generate assembly for a file
+test/filter_block_test.cpp.s:
+	$(MAKE) -f CMakeFiles/leveldb.dir/build.make CMakeFiles/leveldb.dir/test/filter_block_test.cpp.s
+.PHONY : test/filter_block_test.cpp.s
+
 util/arena.o: util/arena.cc.o
 
 .PHONY : util/arena.o
@@ -2931,6 +2958,9 @@ help:
 	@echo "... table/two_level_iterator.o"
 	@echo "... table/two_level_iterator.i"
 	@echo "... table/two_level_iterator.s"
+	@echo "... test/filter_block_test.o"
+	@echo "... test/filter_block_test.i"
+	@echo "... test/filter_block_test.s"
 	@echo "... util/arena.o"
 	@echo "... util/arena.i"
 	@echo "... util/arena.s"

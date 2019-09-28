@@ -18,6 +18,7 @@ static const size_t kFilterBase = 1 << kFilterBaseLg; // 每2KB创建一个新�
 FilterBlockBuilder::FilterBlockBuilder(const FilterPolicy* policy)
     : policy_(policy) {}
 
+// 每写完一个data block时调用
 void FilterBlockBuilder::StartBlock(uint64_t block_offset) {
   uint64_t filter_index = (block_offset / kFilterBase);
   assert(filter_index >= filter_offsets_.size());
@@ -35,21 +36,23 @@ void FilterBlockBuilder::AddKey(const Slice& key) {
   keys_.append(k.data(), k.size());
 }
 
-// 结束一个filter block的记录，将filter data和filter offset记录到filter block中
+// 将filter data和filter offset记录到filter block中
+// 在写完整个sstable时调用
 Slice FilterBlockBuilder::Finish() {
-  if (!start_.empty()) {
+  if (!start_.empty()) {  // 如果还有filter data未生成
     GenerateFilter();
   }
 
   // Append array of per-filter offsets
-  const uint32_t array_offset = result_.size(); // 每个result_对应一个filter data
+  const uint32_t array_offset = result_.size(); // result_对应整个filter block
+  // 添加filter data index
   for (size_t i = 0; i < filter_offsets_.size(); i++) {
     PutFixed32(&result_, filter_offsets_[i]);
   }
 
-  PutFixed32(&result_, array_offset);
+  PutFixed32(&result_, array_offset);  // 添加filter offset's offset,即filter data index的起始地址
   result_.push_back(kFilterBaseLg);  // Save encoding parameter in result
-  return Slice(result_);
+  return Slice(result_); // 以Slice的形式返回filter block
 }
 
 // 生成对应的filter
@@ -79,24 +82,26 @@ void FilterBlockBuilder::GenerateFilter() {
   start_.clear();
 }
 
+// content为filter block
 FilterBlockReader::FilterBlockReader(const FilterPolicy* policy,
                                      const Slice& contents)
     : policy_(policy), data_(nullptr), offset_(nullptr), num_(0), base_lg_(0) {
-  size_t n = contents.size();
+  size_t n = contents.size();  // filter block的大小
   if (n < 5) return;  // 1 byte for base_lg_ and 4 for start of offset array
-  base_lg_ = contents[n - 1];
-  uint32_t last_word = DecodeFixed32(contents.data() + n - 5);
-  if (last_word > n - 5) return;
+  base_lg_ = contents[n - 1]; // 获取base_lg 1 byte
+  uint32_t last_word = DecodeFixed32(contents.data() + n - 5); // 获取filter offset array的起始地址
+  if (last_word > n - 5) return; // 如果filter offset array起始地址超出范围
   data_ = contents.data();
-  offset_ = data_ + last_word;
-  num_ = (n - 5 - last_word) / 4;
+  offset_ = data_ + last_word;  // filter data offset起始地址
+  num_ = (n - 5 - last_word) / 4; // filter array size / 4 : filter data的数量
 }
 
+// 看key是否有可能存在这个block中
 bool FilterBlockReader::KeyMayMatch(uint64_t block_offset, const Slice& key) {
-  uint64_t index = block_offset >> base_lg_;
+  uint64_t index = block_offset >> base_lg_;  // 获取filter data offset
   if (index < num_) {
-    uint32_t start = DecodeFixed32(offset_ + index * 4);
-    uint32_t limit = DecodeFixed32(offset_ + index * 4 + 4);
+    uint32_t start = DecodeFixed32(offset_ + index * 4); // 对应filter的起始地址
+    uint32_t limit = DecodeFixed32(offset_ + index * 4 + 4); // 对应filter的结束地址
     if (start <= limit && limit <= static_cast<size_t>(offset_ - data_)) {
       Slice filter = Slice(data_ + start, limit - start);
       return policy_->KeyMayMatch(key, filter);

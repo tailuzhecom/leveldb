@@ -28,7 +28,7 @@ class FilterPolicy;
 //
 // The sequence of calls to FilterBlockBuilder must match the regexp:
 //      (StartBlock AddKey*)* Finish
-// Filter block中包含了filter data用于记录filter的数据,filter data offset
+// Filter block中包含了filter data用于记录filter的数据(每个filter4 byte),filter data offset
 // 用于记录filter i在这个filter block中对应的偏移量，filter offset's offset
 // 表示索引数据filter data offset的开始地址的偏移量
 class FilterBlockBuilder {
