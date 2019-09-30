@@ -70,7 +70,22 @@ TEST(FilterBlockTest, SingleChunk) {
   ASSERT_TRUE(!reader.KeyMayMatch(100, "missing"));
   ASSERT_TRUE(!reader.KeyMayMatch(100, "other"));
 }
-
+// 看key是否有可能存在这个block中
+bool FilterBlockReader::KeyMayMatch(uint64_t block_offset, const Slice& key) {
+  uint64_t index = block_offset >> base_lg_;  // 获取filter data offset
+  if (index < num_) {
+    uint32_t start = DecodeFixed32(offset_ + index * 4); // 对应filter的起始地址
+    uint32_t limit = DecodeFixed32(offset_ + index * 4 + 4); // 对应filter的结束地址
+    if (start <= limit && limit <= static_cast<size_t>(offset_ - data_)) {
+      Slice filter = Slice(data_ + start, limit - start);
+      return policy_->KeyMayMatch(key, filter);
+    } else if (start == limit) {
+      // Empty filters do not match any keys
+      return false;
+    }
+  }
+  return true;  // Errors are treated as potential matches
+}
 TEST(FilterBlockTest, MultiChunk) {
   FilterBlockBuilder builder(&policy_);
 

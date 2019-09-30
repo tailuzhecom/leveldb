@@ -66,6 +66,7 @@ class LEVELDB_EXPORT Env {
   // implementation instead of relying on this default environment.
   //
   // The result of Default() belongs to leveldb and must never be deleted.
+  // 返回默认的environment
   static Env* Default();
 
   // Create an object that sequentially reads the file with the specified name.

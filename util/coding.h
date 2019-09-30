@@ -62,6 +62,7 @@ char* EncodeVarint64(char* dst, uint64_t value);
 inline void EncodeFixed32(char* dst, uint32_t value) {
   uint8_t* const buffer = reinterpret_cast<uint8_t*>(dst);
 
+  // 如果机器是小端序的直接将内存拷贝过去
   if (port::kLittleEndian) {
     // Fast path for little-endian CPUs. All major compilers optimize this to a
     // single mov (x86_64) / str (ARM) instruction.
@@ -147,11 +148,13 @@ inline uint64_t DecodeFixed64(const char* ptr) {
 // Internal routine for use by fallback path of GetVarint32Ptr
 const char* GetVarint32PtrFallback(const char* p, const char* limit,
                                    uint32_t* value);
+
+
 inline const char* GetVarint32Ptr(const char* p, const char* limit,
                                   uint32_t* value) {
   if (p < limit) {
     uint32_t result = *(reinterpret_cast<const uint8_t*>(p));
-    if ((result & 128) == 0) {
+    if ((result & 128) == 0) {  // 如果value用一个byte就可以直接存储，直接在这个函数中处理
       *value = result;
       return p + 1;
     }
