@@ -12,11 +12,11 @@
 #include "util/coding.h"
 
 namespace leveldb {
-
+// 将seq number和valuetype(value or deletion)合并到一个uint64_t类型的值中
 static uint64_t PackSequenceAndType(uint64_t seq, ValueType t) {
   assert(seq <= kMaxSequenceNumber);
   assert(t <= kValueTypeForSeek);
-  return (seq << 8) | t;
+  return (seq << 8) | t;  // ValueType 1 byte，从seq中腾出8位用于存储ValueType
 }
 
 void AppendInternalKey(std::string* result, const ParsedInternalKey& key) {
@@ -118,21 +118,25 @@ bool InternalFilterPolicy::KeyMayMatch(const Slice& key, const Slice& f) const {
 
 LookupKey::LookupKey(const Slice& user_key, SequenceNumber s) {
   size_t usize = user_key.size();
+  // 确定存储这个key需要的字节数
   size_t needed = usize + 13;  // A conservative estimate
   char* dst;
+  // 检查space_是否够用
   if (needed <= sizeof(space_)) {
     dst = space_;
   } else {
     dst = new char[needed];
   }
   start_ = dst;
-  dst = EncodeVarint32(dst, usize + 8);
-  kstart_ = dst;
-  memcpy(dst, user_key.data(), usize);
-  dst += usize;
+  dst = EncodeVarint32(dst, usize + 8);  // internal key size, dst变为unused部分
+  kstart_ = dst; // internal key start point
+  memcpy(dst, user_key.data(), usize);  // 构造user key部分
+  dst += usize; // tag start point
+  // 构造8B的tag部分
+  // EncodeFixed64如果是小端，则直接内存 copy；如果是大端，则反向 copy，固定占用8bytes
   EncodeFixed64(dst, PackSequenceAndType(s, kValueTypeForSeek));
   dst += 8;
-  end_ = dst;
+  end_ = dst; // 确定end的位置
 }
 
 }  // namespace leveldb
