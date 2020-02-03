@@ -50,7 +50,9 @@ int InternalKeyComparator::Compare(const Slice& akey, const Slice& bkey) const {
   //    increasing user key (according to user-supplied comparator)
   //    decreasing sequence number
   //    decreasing type (though sequence# should be enough to disambiguate)
+  // 比较userkey
   int r = user_comparator_->Compare(ExtractUserKey(akey), ExtractUserKey(bkey));
+  // 如果userkey相等，则比较sequence
   if (r == 0) {
     const uint64_t anum = DecodeFixed64(akey.data() + akey.size() - 8);
     const uint64_t bnum = DecodeFixed64(bkey.data() + bkey.size() - 8);
@@ -134,6 +136,7 @@ LookupKey::LookupKey(const Slice& user_key, SequenceNumber s) {
   dst += usize; // tag start point
   // 构造8B的tag部分
   // EncodeFixed64如果是小端，则直接内存 copy；如果是大端，则反向 copy，固定占用8bytes
+  // 其中kValueTypeForSeek为kTypeValue
   EncodeFixed64(dst, PackSequenceAndType(s, kValueTypeForSeek));
   dst += 8;
   end_ = dst; // 确定end的位置

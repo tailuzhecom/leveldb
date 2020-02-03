@@ -91,9 +91,11 @@ void AppendInternalKey(std::string* result, const ParsedInternalKey& key);
 // On error, returns false, leaves "*result" in an undefined state.
 bool ParseInternalKey(const Slice& internal_key, ParsedInternalKey* result);
 
+// 返回userkey
 // Returns the user key portion of an internal key.
 inline Slice ExtractUserKey(const Slice& internal_key) {
   assert(internal_key.size() >= 8);
+  // internal_key中seq和type一共占8B
   return Slice(internal_key.data(), internal_key.size() - 8);
 }
 
